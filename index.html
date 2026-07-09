@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Royyek Vault - Premium Cloud v8.7 (Multi Profile + Cloud Sync + Namespace Isolation)</title>
+<title>RoyYek Vault - Premium Cloud v8.7 (Multi Profile + Cloud Sync + Namespace Isolation)</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2910/2910805.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -1318,7 +1318,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('but
 </div>
 <div class="lock-logo">
 <div class="logo-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
-<h2 class="logo-text">Royyek Vault Cloud</h2>
+<h2 class="logo-text">RoyYek Vault Cloud</h2>
 <p class="logo-subtitle">Login atau Daftar Akun Cloud</p>
 </div>
 <!-- Tab Login / Register -->
@@ -1408,7 +1408,7 @@ border-radius:8px; animation: errorShake 0.4s ease;">
 <div class="lock-logo">
 <div class="logo-icon"><i class="fa-solid fa-users-gear"></i></div>
 <h2 class="logo-text">Pilih Akun</h2>
-<p class="logo-subtitle">Royyek Vault Multi-Profile</p>
+<p class="logo-subtitle">RoyYek Vault Multi-Profile</p>
 </div>
 <div id="profile-list-container" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; max-height: 300px; overflow-y: auto;"></div>
 <button class="btn-pro" style="width: 100%; justify-content: center; margin-bottom: 12px;" onclick="showAddProfileForm()">
@@ -1436,7 +1436,7 @@ Batal
 <div class="sidebar-header">
 <span style="font-weight:700;">
 <i class="fa-solid fa-shield-halved" style="color: var(--accent-color);"></i>
-Royyek Menu
+RoyYek Menu
 </span>
 <button class="close-sidebar-btn" onclick="toggleSidebar(false)">
 <i class="fa-solid fa-xmark"></i>
@@ -1584,7 +1584,7 @@ style="background:rgba(16,185,129,0.15); color:#10b981; padding:2px 8px; border-
 <div class="header-title-area">
 <button class="menu-toggle-btn" onclick="toggleSidebar(true)"><i class="fa-solid fa-bars"></i></button>
 <div>
-<h1>Royyek Vault</h1>
+<h1>RoyYek Vault</h1>
 <div class="subtitle"><i class="fa-solid fa-cloud"></i> Cloud Synced v8.7</div>
 </div>
 </div>
@@ -1616,7 +1616,7 @@ style="background:rgba(16,185,129,0.15); color:#10b981; padding:2px 8px; border-
 <div id="new-dashboard-view" class="new-dashboard-container" style="display: none;">
 <div class="welcome-banner">
 <div class="welcome-text">
-<h2>Selamat Datang, <span id="user-greeting">Royyek User</span> 👋</h2>
+<h2>Selamat Datang, <span id="user-greeting">RoyYek User</span> 👋</h2>
 <p>Brankas digital Anda aman dan terenkripsi.</p>
 </div>
 <div class="welcome-icon"><i class="fa-solid fa-shield-halved"></i></div>
@@ -3039,7 +3039,7 @@ window.openProfileModal = function() {
     const urlDisplay = document.getElementById('profile-db-url');
     const statusDisplay = document.getElementById('profile-sync-status');
     if (modal) {
-        const currentName = uGet('profile_name') || 'Royyek User';
+        const currentName = uGet('profile_name') || 'RoyYek User';
         nameInput.value = currentName;
         const currentUrl = (typeof apiUrl !== 'undefined' && apiUrl)
             ? apiUrl
@@ -5670,7 +5670,7 @@ ${subtitleHtml}
                     }
                     fileContent = 'RV_ENC:' + btoa(String.fromCharCode(...encrypted));
                 }
-                downloadFile(fileContent, `royyek-vault-backup-${Date.now()}.json`, 'application/json');
+                downloadFile(fileContent, `RoyYek-vault-backup-${Date.now()}.json`, 'application/json');
             }
             // ========== 2. FORMAT CSV ==========
             else if (format === 'csv') {
@@ -5681,7 +5681,7 @@ ${subtitleHtml}
                 exportData.notes.forEach(n => {
                     csvContent += `"Note","${escapeCsv(n.kategori)}","${escapeCsv(n.judul)}","","","","","","${escapeCsv(n.isi)}","${n.tanggal || ''}","${n.favorit ? 'true' : 'false'}"\n`;
                 });
-                downloadFile(csvContent, `royyek-vault-backup-${Date.now()}.csv`, 'text/csv');
+                downloadFile(csvContent, `RoyYek-vault-backup-${Date.now()}.csv`, 'text/csv');
             }
             // ========== 3. FORMAT PDF (FIXED - NO TRUNCATION) ==========
             else if (format === 'pdf') {
@@ -5718,7 +5718,7 @@ ${subtitleHtml}
                 doc.setTextColor(244, 208, 63);
                 doc.setFontSize(22);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Royyek Vault', margin, 16);
+                doc.text('RoyYek Vault', margin, 16);
                 doc.setTextColor(200, 200, 220);
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
@@ -5867,7 +5867,7 @@ ${subtitleHtml}
                 doc.setTextColor(212, 175, 55);
                 doc.setFontSize(28);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Royyek Vault', pageWidth / 2, pageHeight / 2 - 15, { align: 'center' });
+                doc.text('RoyYek Vault', pageWidth / 2, pageHeight / 2 - 15, { align: 'center' });
                 doc.setTextColor(200, 200, 220);
                 doc.setFontSize(12);
                 doc.setFont('helvetica', 'normal');
@@ -5886,12 +5886,12 @@ ${subtitleHtml}
                         doc.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
                         doc.setFontSize(7.5);
                         doc.setTextColor(130, 130, 150);
-                        doc.text(`Royyek Vault - Premium Report`, margin, pageHeight - 8);
+                        doc.text(`RoyYek Vault - Premium Report`, margin, pageHeight - 8);
                         doc.text(`Halaman ${i} dari ${pageCount}`, pageWidth - margin, pageHeight - 8, { align: 'right' });
                         doc.text(`Dicetak: ${new Date().toLocaleString('id-ID')}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
                     }
                 }
-                doc.save(`royyek-vault-report-${Date.now()}.pdf`);
+                doc.save(`RoyYek-vault-report-${Date.now()}.pdf`);
             }
             closeExportModal();
             showToast(`✅ Backup ${format.toUpperCase()} berhasil!`, 'fa-check-circle');
@@ -5932,7 +5932,7 @@ ${subtitleHtml}
         }
         fileContent = 'RV_ENC:' + btoa(String.fromCharCode(...encrypted));
       }
-      downloadFile(fileContent, `royyek-vault-bulk-${Date.now()}.json`, 'application/json');
+      downloadFile(fileContent, `RoyYek-vault-bulk-${Date.now()}.json`, 'application/json');
     }
     // ========== 2. FORMAT CSV ==========
     else if (format === 'csv') {
@@ -5943,7 +5943,7 @@ ${subtitleHtml}
       data.notes.forEach(n => {
         csvContent += `"Note","${escapeCsv(n.kategori)}","${escapeCsv(n.judul)}","","","","","","${escapeCsv(n.isi)}","${n.tanggal || ''}","${n.favorit ? 'true' : 'false'}"\n`;
       });
-      downloadFile(csvContent, `royyek-vault-bulk-${Date.now()}.csv`, 'text/csv');
+      downloadFile(csvContent, `RoyYek-vault-bulk-${Date.now()}.csv`, 'text/csv');
     }
     // ========== 3. FORMAT PDF (PREMIUM REPORT) ==========
     else if (format === 'pdf') {
@@ -5978,7 +5978,7 @@ ${subtitleHtml}
       doc.setTextColor(244, 208, 63);
       doc.setFontSize(22);
       doc.setFont('helvetica', 'bold');
-      doc.text('Royyek Vault', margin, 16);
+      doc.text('RoyYek Vault', margin, 16);
       doc.setTextColor(200, 200, 220);
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
@@ -6105,7 +6105,7 @@ ${subtitleHtml}
       doc.setTextColor(212, 175, 55);
       doc.setFontSize(28);
       doc.setFont('helvetica', 'bold');
-      doc.text('Royyek Vault', pageWidth / 2, pageHeight / 2 - 15, { align: 'center' });
+      doc.text('RoyYek Vault', pageWidth / 2, pageHeight / 2 - 15, { align: 'center' });
       doc.setTextColor(200, 200, 220);
       doc.setFontSize(12);
       doc.text('Premium Cloud Security', pageWidth / 2, pageHeight / 2, { align: 'center' });
@@ -6122,11 +6122,11 @@ ${subtitleHtml}
           doc.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
           doc.setFontSize(7.5);
           doc.setTextColor(130, 130, 150);
-          doc.text(`Royyek Vault - Bulk Report`, margin, pageHeight - 8);
+          doc.text(`RoyYek Vault - Bulk Report`, margin, pageHeight - 8);
           doc.text(`Halaman ${i} dari ${pageCount}`, pageWidth - margin, pageHeight - 8, { align: 'right' });
         }
       }
-      doc.save(`royyek-vault-bulk-report-${Date.now()}.pdf`);
+      doc.save(`RoyYek-vault-bulk-report-${Date.now()}.pdf`);
     }
 
     // === TUTUP MODAL + KELUAR MULTI-SELECT ===
