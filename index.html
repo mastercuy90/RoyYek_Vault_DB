@@ -3207,28 +3207,132 @@ window.saveProfileData = function() {
     }
 
     function renderMultiSelectToolbar() {
-        let existingToolbar = document.getElementById('multiSelectToolbar');
-        const totalSelected = selectedItems.size + selectedFolders.size;
-        if (totalSelected === 0 || !isMultiSelectMode) {
-            if (existingToolbar) existingToolbar.remove();
-            return;
-        }
-        if (!existingToolbar) {
-            existingToolbar = document.createElement('div');
-            existingToolbar.id = 'multiSelectToolbar';
-            existingToolbar.className = 'multi-select-toolbar';
-            document.body.appendChild(existingToolbar);
-        }
-        existingToolbar.innerHTML = `
-<div class="count-badge">${totalSelected} Dipilih</div>
-<button class="multi-btn secondary" onclick="selectAllInView()"><i class="fa-solid fa-check-double"></i> Semua</button>
-<button class="multi-btn primary" style="background: var(--blue);" onclick="bulkMove()"><i class="fa-solid fa-folder-tree"></i> Pindah</button>
-<button class="multi-btn primary" style="background: linear-gradient(135deg, #ffd700, #0891b2);" onclick="bulkMoveToVault()"><i class="fa-solid fa-box-archive"></i> Pindah Vault</button>
-<button class="multi-btn primary" onclick="bulkFavorite()"><i class="fa-solid fa-star"></i> Favorit</button>
-<button class="multi-btn danger" onclick="bulkDelete()"><i class="fa-solid fa-trash"></i> Hapus</button>
-<button class="multi-btn secondary" onclick="toggleMultiSelectMode()"><i class="fa-solid fa-xmark"></i> Batal</button>
-`;
+  let existingToolbar = document.getElementById('multiSelectToolbar');
+  const totalSelected = selectedItems.size + selectedFolders.size;
+  if (totalSelected === 0 || !isMultiSelectMode) {
+    if (existingToolbar) existingToolbar.remove();
+    return;
+  }
+  if (!existingToolbar) {
+    existingToolbar = document.createElement('div');
+    existingToolbar.id = 'multiSelectToolbar';
+    existingToolbar.className = 'multi-select-toolbar';
+    document.body.appendChild(existingToolbar);
+  }
+  existingToolbar.innerHTML = `
+    <div class="count-badge">${totalSelected} Dipilih</div>
+    <button class="multi-btn secondary" onclick="selectAllInView()"><i class="fa-solid fa-check-double"></i> Semua</button>
+    <button class="multi-btn primary" style="background: var(--blue);" onclick="bulkMove()"><i class="fa-solid fa-folder-tree"></i> Pindah</button>
+    <button class="multi-btn primary" style="background: linear-gradient(135deg, #ffd700, #0891b2);" onclick="bulkMoveToVault()"><i class="fa-solid fa-box-archive"></i> Pindah Vault</button>
+    <button class="multi-btn primary" onclick="bulkFavorite()"><i class="fa-solid fa-star"></i> Favorit</button>
+    <button class="multi-btn primary" style="background: linear-gradient(135deg, #10b981, #059669);" onclick="bulkExport()"><i class="fa-solid fa-file-export"></i> Backup</button>
+    <button class="multi-btn danger" onclick="bulkDelete()"><i class="fa-solid fa-trash"></i> Hapus</button>
+    <button class="multi-btn secondary" onclick="toggleMultiSelectMode()"><i class="fa-solid fa-xmark"></i> Batal</button>
+  `;
+}
+    
+    async function bulkExport() {
+  if (selectedItems.size === 0 && selectedFolders.size === 0) {
+    showToast('⚠️ Pilih minimal 1 item atau folder', 'fa-circle-exclamation');
+    return;
+  }
+
+  const dataType = currentTab === 'catatan' ? 'notes' : 'vault';
+  const dataArray = dataType === 'notes' ? notes : accounts;
+
+  // === KUMPULKAN DATA TERPILIH ===
+  const exportedVault = [];
+  const exportedNotes = [];
+  const exportedCategories = new Set();
+  const seenIds = new Set();
+
+  selectedItems.forEach(id => {
+    const item = dataArray.find(a => String(a.id) === String(id));
+    if (item && !seenIds.has(String(item.id))) {
+      seenIds.add(String(item.id));
+      if (dataType === 'notes') exportedNotes.push(item);
+      else exportedVault.push(item);
+      if (item.kategori) exportedCategories.add(item.kategori);
     }
+  });
+
+  selectedFolders.forEach(folderPath => {
+    dataArray.forEach(item => {
+      const kat = item.kategori || 'Umum';
+      if (kat === folderPath || kat.startsWith(folderPath + '/')) {
+        if (!seenIds.has(String(item.id))) {
+          seenIds.add(String(item.id));
+          if (dataType === 'notes') exportedNotes.push(item);
+          else exportedVault.push(item);
+          if (item.kategori) exportedCategories.add(item.kategori);
+        }
+      }
+    });
+  });
+
+  const totalCount = exportedVault.length + exportedNotes.length;
+  if (totalCount === 0) {
+    showToast('⚠️ Tidak ada data untuk diekspor', 'fa-circle-exclamation');
+    return;
+  }
+
+  // === MODAL KONFIRMASI FORMAT (JSON + CSV + PDF) ===
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.style.display = 'grid';
+  modal.innerHTML = `
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3 style="margin-bottom:15px; color:var(--accent-color);">
+        <i class="fa-solid fa-file-export"></i> Backup Data Terpilih
+      </h3>
+      <div style="background:rgba(139,92,246,0.08); border:1px solid var(--card-border-custom); border-radius:12px; padding:14px; margin-bottom:16px;">
+        <div style="font-size:12px; color:var(--slate-300); margin-bottom:8px; font-weight:600;">
+          <i class="fa-solid fa-info-circle" style="color:var(--cyan);"></i> Ringkasan Ekspor
+        </div>
+        <div style="display:flex; gap:12px; font-size:13px; color:var(--text-main); flex-wrap:wrap;">
+          <span><i class="fa-solid fa-key" style="color:#d4af37;"></i> <b>${exportedVault.length}</b> Akun</span>
+          <span><i class="fa-solid fa-note-sticky" style="color:#ffd700;"></i> <b>${exportedNotes.length}</b> Catatan</span>
+          <span><i class="fa-solid fa-folder" style="color:var(--cyan);"></i> <b>${exportedCategories.size}</b> Kategori</span>
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block; font-size:13px; font-weight:600; color:var(--slate-300); margin-bottom:6px;">
+          <i class="fa-solid fa-file-code" style="color:var(--cyan); margin-right:6px;"></i> Format File
+        </label>
+        <select id="bulk-export-format" class="form-input" style="margin-bottom:0;" onchange="toggleBulkExportPass(this.value)">
+          <option value="json">JSON (Disarankan + Enkripsi)</option>
+          <option value="csv">CSV (Excel / Spreadsheet)</option>
+          <option value="pdf">PDF (Laporan Premium)</option>
+        </select>
+      </div>
+      <div id="bulk-export-pass-wrapper" style="margin-bottom:12px;">
+        <label style="display:block; font-size:12px; font-weight:600; color:var(--slate-300); margin-bottom:6px;">
+          <i class="fa-solid fa-lock" style="color:var(--cyan); margin-right:6px;"></i> Password Enkripsi (Opsional)
+        </label>
+        <input type="password" id="bulk-export-password" class="form-input" placeholder="Kosongkan jika tidak perlu" style="margin-bottom:0;">
+      </div>
+      <div id="bulk-export-hint-pdf" style="display:none; font-size:11px; color:var(--slate-500); margin-bottom:12px; padding:8px 12px; background:rgba(139,92,246,0.05); border-radius:8px; border-left:3px solid var(--cyan);">
+        <i class="fa-solid fa-circle-info" style="color:var(--cyan);"></i> Format PDF menghasilkan laporan terstruktur dengan tabel rapi. Tidak mendukung enkripsi password.
+      </div>
+      <div style="display:flex; gap:12px; margin-top:20px;">
+        <button type="button" class="btn-pro" style="flex-grow:1; justify-content:center; background:linear-gradient(135deg, #10b981, #059669);" onclick="executeBulkExport()">
+          <i class="fa-solid fa-download"></i> Download Sekarang
+        </button>
+        <button type="button" style="color:var(--slate-500); background:none; border:none; padding:0 16px;" onclick="this.closest('.modal-overlay').remove()">
+          Batal
+        </button>
+      </div>
+    </div>
+  `;
+  modal.onclick = function(e) { if (e.target === this) this.remove(); };
+  document.body.appendChild(modal);
+
+  window._bulkExportData = {
+    vault: exportedVault,
+    notes: exportedNotes,
+    categories: Array.from(exportedCategories)
+  };
+}
 
     async function bulkDelete() {
         if (selectedItems.size === 0 && selectedFolders.size === 0) return;
@@ -5503,6 +5607,22 @@ ${subtitleHtml}
             if (passWrapper) passWrapper.style.display = 'none';
         }
     }
+    
+    function toggleBulkExportPass(format) {
+  const passWrapper = document.getElementById('bulk-export-pass-wrapper');
+  const pdfHint = document.getElementById('bulk-export-hint-pdf');
+  
+  if (format === 'json') {
+    if (passWrapper) passWrapper.style.display = 'block';
+    if (pdfHint) pdfHint.style.display = 'none';
+  } else if (format === 'pdf') {
+    if (passWrapper) passWrapper.style.display = 'none';
+    if (pdfHint) pdfHint.style.display = 'block';
+  } else {
+    if (passWrapper) passWrapper.style.display = 'none';
+    if (pdfHint) pdfHint.style.display = 'none';
+  }
+}
 
     function downloadFile(content, filename, mimeType) {
         const blob = new Blob([content], { type: mimeType });
@@ -5782,6 +5902,250 @@ ${subtitleHtml}
             // Cleanup jika perlu
         }
     }
+    
+    async function executeBulkExport() {
+  const data = window._bulkExportData;
+  if (!data) return;
+
+  const format = document.getElementById('bulk-export-format')?.value || 'json';
+  const password = document.getElementById('bulk-export-password')?.value.trim() || '';
+
+  try {
+    // ========== 1. FORMAT JSON ==========
+    if (format === 'json') {
+      const exportData = {
+        version: '8.4',
+        exportDate: new Date().toISOString(),
+        exportType: 'bulk-selection',
+        categories: data.categories,
+        vault: data.vault,
+        notes: data.notes
+      };
+      let fileContent = JSON.stringify(exportData, null, 2);
+      if (password.length > 0) {
+        const encoder = new TextEncoder();
+        const key = encoder.encode(password);
+        const rawData = encoder.encode(fileContent);
+        const encrypted = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; i++) {
+          encrypted[i] = rawData[i] ^ key[i % key.length];
+        }
+        fileContent = 'RV_ENC:' + btoa(String.fromCharCode(...encrypted));
+      }
+      downloadFile(fileContent, `royyek-vault-bulk-${Date.now()}.json`, 'application/json');
+    }
+    // ========== 2. FORMAT CSV ==========
+    else if (format === 'csv') {
+      let csvContent = "Type,Kategori,Nama/Judul,Username,Email,Password,Keterangan1,Keterangan2,Isi,Tanggal,Favorit\n";
+      data.vault.forEach(a => {
+        csvContent += `"Vault","${escapeCsv(a.kategori)}","${escapeCsv(a.nama_aplikasi)}","${escapeCsv(a.username)}","${escapeCsv(a.email)}","${escapeCsv(a.password)}","${escapeCsv(a.ket)}","${escapeCsv(a.ket_dua)}","","","${a.favorit ? 'true' : 'false'}"\n`;
+      });
+      data.notes.forEach(n => {
+        csvContent += `"Note","${escapeCsv(n.kategori)}","${escapeCsv(n.judul)}","","","","","","${escapeCsv(n.isi)}","${n.tanggal || ''}","${n.favorit ? 'true' : 'false'}"\n`;
+      });
+      downloadFile(csvContent, `royyek-vault-bulk-${Date.now()}.csv`, 'text/csv');
+    }
+    // ========== 3. FORMAT PDF (PREMIUM REPORT) ==========
+    else if (format === 'pdf') {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        showToast('❌ Library PDF belum termuat. Cek koneksi internet!', 'fa-circle-xmark');
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 14;
+      const contentWidth = pageWidth - margin * 2;
+      const SAFE_BOTTOM = 20;
+
+      const cleanText = (str) => {
+        if (!str) return '-';
+        return String(str)
+          .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
+          .replace(/[\u{2600}-\u{27BF}]/gu, '')
+          .replace(/[\u{1F900}-\u{1F9FF}]/gu, '')
+          .replace(/[\u{2700}-\u{27BF}]/gu, '')
+          .replace(/[^\x20-\x7E\u00C0-\u024F]/g, ' ')
+          .trim() || '-';
+      };
+
+      // HEADER
+      doc.setFillColor(15, 10, 26);
+      doc.rect(0, 0, pageWidth, 32, 'F');
+      doc.setFillColor(212, 175, 55);
+      doc.rect(0, 32, pageWidth, 1.5, 'F');
+      doc.setTextColor(244, 208, 63);
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Royyek Vault', margin, 16);
+      doc.setTextColor(200, 200, 220);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Laporan Bulk Export (Data Terpilih)', margin, 23);
+      doc.setTextColor(150, 150, 170);
+      doc.setFontSize(8);
+      doc.text('Cloud Synced v8.7', margin, 29);
+
+      // METADATA
+      let y = 42;
+      doc.setFillColor(248, 245, 255);
+      doc.setDrawColor(212, 175, 55);
+      doc.roundedRect(margin, y, contentWidth, 22, 2, 2, 'FD');
+      doc.setTextColor(60, 40, 100);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.text('RINGKASAN EKSPOR', margin + 4, y + 6);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(80, 80, 100);
+      doc.text(`Tanggal   : ${new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })}`, margin + 4, y + 12);
+      doc.text(`Total     : ${data.vault.length} Akun  |  ${data.notes.length} Catatan  |  ${data.categories.length} Kategori`, margin + 4, y + 17);
+      y += 30;
+
+      // LOOP CATEGORIES
+      const categories = data.categories.sort();
+      let hasContent = false;
+      categories.forEach(cat => {
+        const catAccounts = data.vault.filter(a => a.kategori === cat);
+        const catNotes = data.notes.filter(n => n.kategori === cat);
+        if (catAccounts.length === 0 && catNotes.length === 0) return;
+        hasContent = true;
+
+        if (y > (pageHeight - 50)) { doc.addPage(); y = 20; }
+        doc.setFillColor(124, 58, 237);
+        doc.roundedRect(margin, y, contentWidth, 9, 1.5, 1.5, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`[ ${cleanText(cat)} ]`, margin + 4, y + 6);
+        const totalCount = catAccounts.length + catNotes.length;
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${totalCount} item`, pageWidth - margin - 4, y + 6, { align: 'right' });
+        y += 13;
+
+        // TABEL AKUN
+        if (catAccounts.length > 0) {
+          if (y > (pageHeight - 40)) { doc.addPage(); y = 20; }
+          doc.setTextColor(100, 60, 180);
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`AKUN / KREDENSIAL (${catAccounts.length})`, margin, y);
+          y += 3;
+          const accountRows = catAccounts.map(a => [
+            cleanText(a.nama_aplikasi),
+            cleanText(a.username),
+            cleanText(a.email),
+            cleanText(a.password),
+            cleanText(a.ket),
+            cleanText(a.ket_dua)
+          ]);
+          doc.autoTable({
+            startY: y,
+            head: [['Aplikasi', 'Username', 'Email', 'Password', 'Ket. 1', 'Ket. 2']],
+            body: accountRows,
+            margin: { left: margin, right: margin, top: 5, bottom: SAFE_BOTTOM },
+            styles: { fontSize: 7.5, cellPadding: 1.8, lineColor: [230, 220, 250], lineWidth: 0.2, overflow: 'linebreak', cellWidth: 'auto' },
+            headStyles: { fillColor: [212, 175, 55], textColor: [15, 10, 26], fontStyle: 'bold', fontSize: 8 },
+            alternateRowStyles: { fillColor: [250, 247, 255] },
+            columnStyles: {
+              0: { cellWidth: 32, fontStyle: 'bold', overflow: 'linebreak' },
+              1: { cellWidth: 28, overflow: 'linebreak' },
+              2: { cellWidth: 35, overflow: 'linebreak' },
+              3: { cellWidth: 28, overflow: 'linebreak' },
+              4: { cellWidth: 25, overflow: 'linebreak' },
+              5: { cellWidth: 'auto', overflow: 'linebreak' }
+            }
+          });
+          y = doc.lastAutoTable.finalY + 6;
+        }
+
+        // TABEL CATATAN
+        if (catNotes.length > 0) {
+          if (y > (pageHeight - 40)) { doc.addPage(); y = 20; }
+          doc.setTextColor(6, 120, 170);
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`CATATAN (${catNotes.length})`, margin, y);
+          y += 3;
+          const noteRows = catNotes.map(n => [
+            cleanText(n.judul),
+            cleanText(n.isi),
+            n.tanggal ? new Date(n.tanggal).toLocaleDateString('id-ID') : '-'
+          ]);
+          doc.autoTable({
+            startY: y,
+            head: [['Judul', 'Isi Catatan', 'Tanggal']],
+            body: noteRows,
+            margin: { left: margin, right: margin, top: 5, bottom: SAFE_BOTTOM },
+            styles: { fontSize: 7.5, cellPadding: 1.8, lineColor: [220, 230, 250], lineWidth: 0.2, overflow: 'linebreak', cellWidth: 'auto', minCellHeight: 8 },
+            headStyles: { fillColor: [99, 102, 241], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+            alternateRowStyles: { fillColor: [240, 248, 255] },
+            columnStyles: {
+              0: { cellWidth: 40, fontStyle: 'bold', overflow: 'linebreak' },
+              1: { cellWidth: 'auto', overflow: 'linebreak' },
+              2: { cellWidth: 22, halign: 'center', overflow: 'linebreak' }
+            }
+          });
+          y = doc.lastAutoTable.finalY + 6;
+        }
+      });
+
+      if (!hasContent) {
+        doc.setTextColor(150, 150, 150);
+        doc.setFontSize(10);
+        doc.text('Tidak ada data pada kategori yang dipilih.', pageWidth / 2, y + 10, { align: 'center' });
+      }
+
+      // HALAMAN PENUTUP
+      doc.addPage();
+      doc.setFillColor(15, 10, 26);
+      doc.rect(0, 0, pageWidth, pageHeight, 'F');
+      doc.setTextColor(212, 175, 55);
+      doc.setFontSize(28);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Royyek Vault', pageWidth / 2, pageHeight / 2 - 15, { align: 'center' });
+      doc.setTextColor(200, 200, 220);
+      doc.setFontSize(12);
+      doc.text('Premium Cloud Security', pageWidth / 2, pageHeight / 2, { align: 'center' });
+      doc.setTextColor(150, 150, 170);
+      doc.setFontSize(9);
+      doc.text(`Bulk Export - ${new Date().toLocaleString('id-ID')}`, pageWidth / 2, pageHeight / 2 + 15, { align: 'center' });
+
+      // FOOTER
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        if (i !== pageCount) {
+          doc.setDrawColor(212, 175, 55);
+          doc.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
+          doc.setFontSize(7.5);
+          doc.setTextColor(130, 130, 150);
+          doc.text(`Royyek Vault - Bulk Report`, margin, pageHeight - 8);
+          doc.text(`Halaman ${i} dari ${pageCount}`, pageWidth - margin, pageHeight - 8, { align: 'right' });
+        }
+      }
+      doc.save(`royyek-vault-bulk-report-${Date.now()}.pdf`);
+    }
+
+    // === TUTUP MODAL + KELUAR MULTI-SELECT ===
+    const modal = document.querySelector('.modal-overlay[style*="grid"]');
+    if (modal && modal.querySelector('#bulk-export-format')) modal.remove();
+    
+    selectedItems.clear();
+    selectedFolders.clear();
+    isMultiSelectMode = false;
+    renderCurrentView();
+    renderMultiSelectToolbar();
+
+    showToast(`✅ Backup ${data.vault.length + data.notes.length} item (${format.toUpperCase()}) berhasil!`, 'fa-check-circle');
+    window._bulkExportData = null;
+  } catch (e) {
+    console.error('Bulk export error:', e);
+    showToast('❌ Gagal backup: ' + e.message, 'fa-circle-xmark');
+  }
+}
 
     function closeExportModal() {
         const modal = safeGet('exportModal');
@@ -8062,6 +8426,9 @@ window.onload = async function() {
     window.bulkFavorite = bulkFavorite;
     window.bulkMove = bulkMove;
     window.bulkMoveToVault = bulkMoveToVault;
+    window.bulkExport = bulkExport;
+window.toggleBulkExportPass = toggleBulkExportPass;
+window.executeBulkExport = executeBulkExport;
     // Expose multi cloud functions
     window.getCloudAccounts = getCloudAccounts;
     window.getActiveCloudAccount = getActiveCloudAccount;
